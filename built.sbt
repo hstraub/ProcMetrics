@@ -17,5 +17,5 @@ resolvers ++= Seq("snapshots" at "http://oss.sonatype.org/content/repositories/s
 
 libraryDependencies += "org.specs2" %% "specs2-core" % "2.4.3" % "test"
 
-
+libraryDependencies += "com.typesafe.play" %% "play-json" % "2.4.0-M2"
 

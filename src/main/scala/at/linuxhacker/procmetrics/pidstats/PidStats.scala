@@ -18,10 +18,10 @@ object Schedstat extends Stat {
       val parts = content( 0 ).split( " " )
       val used_sec = parts( 0 ).toFloat / 1000
       val wait_runqueue_sec = parts( 1 ).toFloat / 1000
-      Some( ProcCategory( pid, "CPU",
+      Some( ProcCategory( pid, "schedstat",
         List(
-          ProcValue( "used_sec", ProcValueFloat( used_sec ) ),
-          ProcValue( "wait_runqueue_sec", ProcValueFloat( wait_runqueue_sec ) ) ) ) )
+          ProcValue( "used_sec", ProcValueX[Float]( used_sec ) ),
+          ProcValue( "wait_runqueue_sec", ProcValueX[Float]( wait_runqueue_sec ) ) ) ) )
     } else {
       None
     }
@@ -39,8 +39,8 @@ object Netstat extends Stat {
       val outOcteds = parts( 8 ).toFloat
       Some( ProcCategory( pid, "netstat",
         List(
-          ProcValue( "in_octets", ProcValueFloat( inOctets ) ),
-          ProcValue( "out_octets", ProcValueFloat( outOcteds ) ) ) ) )
+          ProcValue( "in_octets", ProcValueX[Float]( inOctets ) ),
+          ProcValue( "out_octets", ProcValueX[Float]( outOcteds ) ) ) ) )
     } else {
       None
     }
@@ -54,11 +54,11 @@ object Io extends Stat {
     val values = content.map { rec =>
       {
         val parts = rec.split( ":" )
-        ProcValue( parts( 0 ), ProcValueFloat( parts( 1 ).toFloat ) )
+        ProcValue( parts( 0 ), ProcValueX[Float]( parts( 1 ).toFloat ) )
       }
     }
     if ( values.length > 0 ) {
-      Some( ProcCategory( pid, "diskio", values ) )
+      Some( ProcCategory( pid, "io", values ) )
     } else {
       None
     }
@@ -75,14 +75,45 @@ object Statm extends Stat {
       val resident = parts( 1 ).toInt
       val share = parts( 2 ).toInt
       val data = parts( 5 ).toInt
-      Some( ProcCategory( pid, "diskio", List( 
-          ProcValue( "size", ProcValueInt( size ) ),
-          ProcValue( "resident", ProcValueInt( resident ) ),
-          ProcValue( "share", ProcValueInt( share ) ),
-          ProcValue( "data", ProcValueInt( data ) )          
+      Some( ProcCategory( pid, "statm", List( 
+          ProcValue( "size", ProcValueX[Int]( size ) ),
+          ProcValue( "resident", ProcValueX[Int]( resident ) ),
+          ProcValue( "share", ProcValueX[Int]( share ) ),
+          ProcValue( "data", ProcValueX[Int]( data ) )          
       ) ) )
     } else {
       None
     }
   }
+}
+
+object Status extends Stat {
+  def getFilename() = { "status" }
+
+  def getStat( pid: Pid, content: List[String] ): Option[ProcCategory] = {
+    if ( content.length > 0 ) {
+      
+      val vms = content.filter( _.startsWith( "Vm" ) ).map( rec => {
+        val parts = rec.split( ":" )
+        val vmName = parts(0)
+        val memparts = parts(1).replaceAll( """^(\s+)""", "" ).split( " " )
+        val vmValue = memparts(0).toInt
+        val factor = memparts(1) match {
+          case "kB" => 1024
+          case "MB" => 1024 * 1024
+          case _ => 1
+        }
+        ProcValue( vmName, ProcValueX[Int]( vmValue * factor ) )
+      })
+
+      val threadCount = ProcValue( "thread_count", 
+          ProcValueX[Int]( content.filter( _.startsWith( "Threads:" ) )(0).split( ":" )(1).replaceAll( """^(\s+)""", "" ).toInt ) )
+      
+      val values = threadCount :: vms 
+      Some( ProcCategory( pid, "status", values ) )          
+    } else {
+      None
+    }
+  }
+  
 }

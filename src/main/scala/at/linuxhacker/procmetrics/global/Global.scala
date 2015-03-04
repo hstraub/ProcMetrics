@@ -12,7 +12,7 @@ object GlobalUptime extends Global {
     if ( content.length > 0 ) {
       Some( ProcGlobal( "uptime",
         List( ProcValue( "uptime_sec",
-          ProcValueFloat( content( 0 ).split( " " )( 0 ).toFloat ) ) ) ) )
+          ProcValueX[Float]( content( 0 ).split( " " )( 0 ).toFloat ) ) ) ) )
     } else {
       None
     }
@@ -30,11 +30,11 @@ object Cpuinfo extends Global {
       Some( ProcGlobal( "cpuinfo",
         List( 
             ProcValue( "processor_count",
-        		ProcValueInt( processorCount ) ),
+        		ProcValueX[Int]( processorCount ) ),
         	ProcValue( "model_name",
-        	    ProcValueString( modelName ) ),
+        	    ProcValueX[String]( modelName ) ),
         	ProcValue( "cpu_mhz", 
-        	    ProcValueFloat( cpuMhz ) )
+        	    ProcValueX[Float]( cpuMhz ) )
         	)
       ) )
     } else {
@@ -51,11 +51,11 @@ object Loadavg extends Global {
       Some( ProcGlobal( "loadavg",
         List( 
             ProcValue( "load_1m",
-        		ProcValueFloat( parts( 0 ).toFloat ) ),
+        		ProcValueX[Float]( parts( 0 ).toFloat ) ),
         	ProcValue( "load_5m",
-        	    ProcValueFloat( parts( 1 ).toFloat ) ),
+        	    ProcValueX[Float]( parts( 1 ).toFloat ) ),
         	ProcValue( "load_10m", 
-        	    ProcValueFloat( parts( 2 ).toFloat ) )
+        	    ProcValueX[Float]( parts( 2 ).toFloat ) )
         	)
       ) )
     } else {
