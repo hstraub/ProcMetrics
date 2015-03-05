@@ -65,6 +65,26 @@ object Io extends Stat {
   }
 }
 
+object PStat extends Stat {
+  def getFilename() = { "stat" }
+
+  def getStat( pid: Pid, content: List[String] ): Option[ProcCategory] = {
+    if ( content.length > 0 ) {
+      val parts = content(0).split( " " )
+      val user =  parts(13).toInt
+      val sys = parts(14).toInt
+      val sum = user + sys
+      Some( ProcCategory( pid, "stat", List(
+          ProcValue( "cpu_user_sec",  ProcValueX[Int]( user ) ),
+          ProcValue( "cpu_sys_sec", ProcValueX[Int]( sys ) ),
+          ProcValue( "cpu_sum_sec", ProcValueX[Int]( sum ) )
+      ) ) )
+    } else {
+      None
+    }
+  }
+}
+
 object Statm extends Stat {
   def getFilename() = { "statm" }
 

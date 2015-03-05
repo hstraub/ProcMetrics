@@ -6,9 +6,14 @@ import at.linuxhacker.procmetrics.pidstats._
 import java.io.File
 
 object ProcFilter {
-  def filter1( pids: List[Pid] ): List[Pid] = {
-    pids.filter( pid => if ( pid.cmdline contains "gvfs" ) true else false )
+  def patternFilter( pattern: String, pids: List[Pid] ): List[Pid] = {
+    pids.filter( pid => if ( pid.cmdline contains pattern ) true else false )
   }
+
+  def nullFilter( pattern: String, pids: List[Pid] ): List[Pid] = {
+    pids
+  }
+  
 }
 
 object ProcInfo {
@@ -30,7 +35,7 @@ object ProcInfo {
         val records = getFileContent( dir + "/cmdline" )
         if ( records.length > 0 ) {
           dir match {
-            case pidPattern( pid ) => Some( Pid( pid, records( 0 ) ) )
+            case pidPattern( pid ) => Some( Pid( pid, records( 0 ).replace( "\0", " " ) ) )
             case _ => None
           }
         } else {
@@ -42,8 +47,8 @@ object ProcInfo {
       .map( x => x match { case Some( s ) => s case _ => null } )
   }
 
-  def filterPids( f: List[Pid] => List[Pid] )( pids: List[Pid] ): List[Pid] = {
-    f( pids )
+  def filterPids( f: ( String, List[Pid] ) => List[Pid] )( pattern: String, pids: List[Pid] ): List[Pid] = {
+    f( pattern, pids )
   }
 
   def getStat( stats: List[Stat], pids: List[Pid] ): List[List[ProcCategory]] = {
