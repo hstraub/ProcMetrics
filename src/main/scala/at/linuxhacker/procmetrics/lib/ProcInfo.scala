@@ -51,7 +51,7 @@ object ProcInfo {
     f( pattern, pids )
   }
 
-  def getStat( stats: List[Stat], pids: List[Pid] ): List[List[ProcCategory]] = {
+  def getStat( stats: List[Stat], pids: List[Pid] ): List[ProcCategory] = {
     stats.map {
       stat =>
         {
@@ -62,9 +62,10 @@ object ProcInfo {
                 stat.getStat( pid, records )
               }
           }
-        }.filter( x => x match { case Some( s ) => true case _ => false } )
-          .map( x => x match { case Some( s ) => s case _ => null } )
-    }
+        }
+          .filter( x => x match { case Some( s ) => true case _ => false } )
+          .map( x => x match { case Some( s ) => s case _ => throw new Exception( "Impmentation error." ) } )
+    }.flatten
   }
 
   def getGlobals( globals: List[Global] ): List[ProcGlobal] = {
@@ -73,6 +74,15 @@ object ProcInfo {
       g.getStat( records )
     }.filter( x => x match { case Some( s ) => true case _ => false } )
       .map( x => x match { case Some( s ) => s case _ => null } )
+  }
+  
+  def getMultiGlobals( globals: List[MultiGlobalStatsSpecifier] ): List[MultiGlobalStatsResult] = {
+    globals.map( spec => {
+      val g = spec.stats
+      val records = getFileContent( "/proc/" + g.getFilename )
+      val res = g.getStat( records )
+      MultiGlobalStatsResult( spec.name, res )
+    })
   }
 
   private def getFileContent( filename: String ): List[String] = {

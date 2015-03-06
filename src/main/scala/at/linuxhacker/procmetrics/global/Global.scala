@@ -6,6 +6,7 @@ abstract class Global {
   def getFilename(): String
   def getStat( content: List[String] ): Option[ProcGlobal]
 }
+
 object GlobalUptime extends Global {
   def getFilename(): String = { "uptime" }
   def getStat( content: List[String] ): Option[ProcGlobal] = {
@@ -60,6 +61,40 @@ object Loadavg extends Global {
       ) )
     } else {
       None
+    }
+  }
+}
+
+
+abstract class MultiGlobalStats {
+  def getFilename(): String
+  def getStat( content: List[String] ): List[ProcGlobal]
+}
+
+case class MultiGlobalStatsSpecifier( name: String, stats: MultiGlobalStats )
+case class MultiGlobalStatsResult( name: String, result: List[ProcGlobal] )
+
+object NetDev extends MultiGlobalStats {
+  def getFilename( ): String = { "net/dev" }
+  def getStat( content: List[String] ): List[ProcGlobal] = {
+    case class Netstat( name: String, recbytes: Float, transbytes: Float )
+    if ( content.length > 0 ) {
+      val pattern ="""^([a-zA-Z0-9]+):""".r
+      val extract = content.map( rec => {
+        val parts = rec.replaceAll( """^( +)""", "").replaceAll( """( +)""", " " ).split( " " )
+        parts( 0 ) match {
+          case pattern( name ) => Some( Netstat( name, parts( 1 ).toFloat, parts( 9 ).toFloat ) )
+          case _ => None
+        }
+      } )
+      extract
+      	.filter( x => x match { case Some(y) => true case _ => false } )
+      	.map( _ match { case Some(y) => y case _ => throw new Exception( "Not possible" ) } )
+      	.map( x => ProcGlobal( x.name, List( 
+      	    ProcValue( "recv_bytes", ProcValueX[Float]( x.recbytes ) ),
+      	    ProcValue( "trans_bytes", ProcValueX[Float]( x.transbytes ) ) ) ) )
+    } else {
+      List[ProcGlobal]( )
     }
   }
 }

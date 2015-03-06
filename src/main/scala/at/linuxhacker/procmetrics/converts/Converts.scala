@@ -3,16 +3,18 @@ package at.linuxhacker.procmetrics.converts
 import at.linuxhacker.procmetrics.values._
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import at.linuxhacker.procmetrics.global.MultiGlobalStatsResult
+
+abstract class StatResult
+case class StatGlobalResult( result: List[ProcGlobal] ) extends StatResult
+case class StatStatsResult( result: List[ProcCategory] ) extends StatResult
 
 object ProcConverters {
 
-  def toJson( globals: List[ProcGlobal], stats: List[List[ProcCategory]] ): String = {
-    var pidGroup = stats.flatten.groupBy( _.pid.pid )
+  def toJson( globals: List[ProcGlobal], stats: List[ProcCategory], multiGlobals: List[MultiGlobalStatsResult] ): String = {
+    var pidGroup = stats.groupBy( _.pid.pid )
     
-    val globalsList = globals.map( item => {
-      val valueList = item.values.map( procValueToJson( _ ) )
-      Json.obj( item.category -> valueList )
-    })
+    val globalsList = globalsToJson( globals )
 
     val jsonStats = pidGroup.map( pid => {
       val catGroup = pid._2.groupBy( _.category )
@@ -23,10 +25,19 @@ object ProcConverters {
       Json.obj( pid._1 -> x )
     })
     
-    val jsonData = Json.obj( "globals" -> globalsList, "stats" -> jsonStats )
+    val jsonMultiStats = multiGlobals.map( g => Json.obj( g.name -> globalsToJson( g.result  ) ) )
+    
+    val jsonData = Json.obj( "globals" -> globalsList, "stats" -> jsonStats, "multi" -> jsonMultiStats)
     
     
     jsonData.toString
+  }
+  
+  private def globalsToJson( globals:  List[ProcGlobal] ): List[JsObject] = {
+    globals.map( item => {
+      val valueList = item.values.map( procValueToJson( _ ) )
+      Json.obj( item.category -> valueList )
+    })
   }
   
   private def procValueToJson( v: ProcValue): JsObject = {

@@ -5,12 +5,11 @@ import at.linuxhacker.procmetrics.values._
 case class Column( category: String, name: String )
 
 object MonitorFunctions {
-  def transformToColumns( stats: List[List[ProcCategory]], columns: List[Column] ) = {
-    val t = stats.flatten
+  def transformToColumns( stats: List[ProcCategory], columns: List[Column] ) = {
     val categories = columns.map( _.category ).toSet
     val names = columns.map( x => x.category -> x.name  ).toMap
     val paths = columns.map( x => x.category + "/" + x.name )
-	val filteredCats = t.filter( cat => categories contains cat.category )
+	val filteredCats = stats.filter( cat => categories contains cat.category )
 	val filteredStats = filteredCats.map( x => {
       val filteredValues = x.values.filter( v => ( paths contains x.category + "/" + v.name )
         && ( v.value match { case ProcValueX( x: Int ) => true case ProcValueX( x: Float ) => true case _ => false } ) )

@@ -16,8 +16,9 @@ object ProcMetricsMain {
     val filteredPids = ProcInfo.filterPids( ProcFilter.patternFilter )( "g", pids )
     val stats = ProcInfo.getStat( List( Schedstat, Netstat, Io, Statm, Status, PStat ), filteredPids )
     val globals = ProcInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
+    val multiGlobalsStat = ProcInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
 
-    println( ProcConverters.toJson( globals, stats ) )
+    println( ProcConverters.toJson( globals, stats, multiGlobalsStat ) )
   }
 }
 
