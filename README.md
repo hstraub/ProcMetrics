@@ -1,4 +1,4 @@
-= ProcMetrics =
+# ProcMetrics
 
 The first motivation was: learning Functional Programming style in Scala with a usefull project. ProcMetrics key points:
 
@@ -12,24 +12,24 @@ The first motivation was: learning Functional Programming style in Scala with a 
 
 The project is in a early state and is currently not useable.
 
-= Build ProcMetrics =
+# Build ProcMetrics
 
 1. git clone ...
 2. cd ProcMetrics
 3. sbt compile or sbt run
 
-== Build a Jar ==
+# Build a Jar
 
 * sbt assembly
 
 produce a jar in the target directory path
 
-= Working with Eclipse =
+# Working with Eclipse
 
 1. sbt eclipse
 2. In Eclipse: import existing project 
 
-= Current State =
+# Current State
 
 Two main object are available:
 
@@ -37,7 +37,9 @@ Two main object are available:
 2. at.linuxhacker.procmetrics.bin.ProcMetricsMonitor
 
 Start the program with 
-```sbt run
+
+```
+$ sbt run
 Multiple main classes detected, select one to run:
 
  [1] at.linuxhacker.procmetrics.bin.ProcMetricsMain
@@ -47,7 +49,9 @@ Enter number:
 ```
 
 or build a jar file and start it with the java command:
-``` sbt assembly
+
+```
+$ sbt assembly
 
 ...
 
@@ -59,7 +63,9 @@ $ java -cp  target/scala-2.11/ProcMetrics-assembly-0.1.jar \
 ```
 
 Tip: Download [jq](http://stedolan.github.io/jq/) and use it with the JSON output:
-``` $java -cp  target/scala-2.11/ProcMetrics-assembly-0.1.jar \
+
+```
+$java -cp  target/scala-2.11/ProcMetrics-assembly-0.1.jar \
   at.linuxhacker.procmetrics.bin.ProcMetricsMain | jq "."
 
 ...
@@ -101,9 +107,6 @@ Tip: Download [jq](http://stedolan.github.io/jq/) and use it with the JSON outpu
 ...
 ```
 
-= License =
+# License
 
 GNU GPLv3
-
-
-
