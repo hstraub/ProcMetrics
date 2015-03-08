@@ -42,9 +42,9 @@ object ProcConverters {
   
   private def procValueToJson( v: ProcValue): JsObject = {
         val x = v.value match {
-          case ProcValueX( a: String ) => JsString( a  )
-          case ProcValueX( a: Int ) => JsNumber( a  )
-          case ProcValueX( a: Float ) => JsNumber( a  )
+          case a: ProcStringValue => JsString( a.value  )
+          case a: ProcIntValue => JsNumber( a.value  )
+          case a: ProcFloatValue => JsNumber( a.value  )
         }
         Json.obj( v.name  -> x )
   }

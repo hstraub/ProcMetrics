@@ -12,11 +12,11 @@ object MonitorFunctions {
 	val filteredCats = stats.filter( cat => categories contains cat.category )
 	val filteredStats = filteredCats.map( x => {
       val filteredValues = x.values.filter( v => ( paths contains x.category + "/" + v.name )
-        && ( v.value match { case ProcValueX( x: Int ) => true case ProcValueX( x: Float ) => true case _ => false } ) )
+        && ( v.value match { case x: ProcIntValue => true case x: ProcFloatValue => true case _ => false } ) )
       val floatValues = filteredValues.map( v => {
         v.value match {
-          case ProcValueX( x: Int ) => ProcValue( v.name, ProcValueX[Float]( x.toFloat ) )
-          case ProcValueX( x: Float ) => v
+          case x: ProcIntValue => ProcValue( v.name, ProcFloatValue( x.value ) )
+          case x: ProcFloatValue => v
           case _ => null
         }
       } )
@@ -48,11 +48,11 @@ object MonitorFunctions {
       var diffList = scala.collection.mutable.ListBuffer[ProcValue]( )
       for ( ( l1, i ) <- t1(pid).zipWithIndex ) {
         val x = t1(pid)(i).value
-        val y = x.asInstanceOf[ProcValueX[Float]]
+        val y = x.asInstanceOf[ProcFloatValue]
         if ( t1(pid).length == t2(pid).length ) {
-        val value1 = t1(pid)(i).value.asInstanceOf[ProcValueX[Float]].value
-        val value2 = t2(pid)(i).value.asInstanceOf[ProcValueX[Float]].value
-        diffList += ProcValue( t1(pid)(i).name, ProcValueX[Float]( value2 - value1 )  )
+        val value1 = t1(pid)(i).value.asInstanceOf[ProcFloatValue].value
+        val value2 = t2(pid)(i).value.asInstanceOf[ProcFloatValue].value
+        diffList += ProcValue( t1(pid)(i).name, ProcFloatValue( value2 - value1 )  )
         } else {
           println( "Unterschied: +++++++++++++++++++++++" )
           println( t1(pid) )

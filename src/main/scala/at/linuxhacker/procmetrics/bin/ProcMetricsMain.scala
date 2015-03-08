@@ -5,8 +5,7 @@ import at.linuxhacker.procmetrics.global._
 import at.linuxhacker.procmetrics.pidstats._
 import at.linuxhacker.procmetrics.converts.ProcConverters
 import at.linuxhacker.procmetrics.monitor._
-import at.linuxhacker.procmetrics.values.ProcValueX
-import at.linuxhacker.procmetrics.values.ProcValueX
+import at.linuxhacker.procmetrics.values._
 
 object ProcMetricsMain {
 
@@ -56,11 +55,11 @@ object ProcMetricsMonitor {
         columns )
 
       val r = MonitorFunctions.diffTables( t1, t2 )
-      val x = r.filter( _._2.filter( _.value.asInstanceOf[ProcValueX[Float]].value != 0f ).length > 0 )
+      val x = r.filter( _._2.filter( _.value.asInstanceOf[ProcFloatValue].value != 0f ).length > 0 )
       x.foreach( pid => {
-        val withoutNull = pid._2.filter( _.value.asInstanceOf[ProcValueX[Float]].value != 0f )
+        val withoutNull = pid._2.filter( _.value.asInstanceOf[ProcFloatValue].value != 0f )
         if ( withoutNull.length > 0 ) {
-          val t = withoutNull.map( x => x.name + ": " + x.value.asInstanceOf[ProcValueX[Float]].value )
+          val t = withoutNull.map( x => x.name + ": " + x.value.asInstanceOf[ProcFloatValue].value )
           val cmdline = filteredPidsToCmdlineMap( pid._1 )
           println( "PID: %8s c: %-20s v: %s"
             .format( pid._1,

@@ -20,8 +20,8 @@ object Schedstat extends Stat {
       val wait_runqueue_sec = parts( 1 ).toFloat / 1000
       Some( ProcCategory( pid, "schedstat",
         List(
-          ProcValue( "used_sec", ProcValueX[Float]( used_sec ) ),
-          ProcValue( "wait_runqueue_sec", ProcValueX[Float]( wait_runqueue_sec ) ) ) ) )
+          ProcValue( "used_sec", ProcFloatValue( used_sec ) ),
+          ProcValue( "wait_runqueue_sec", ProcFloatValue( wait_runqueue_sec ) ) ) ) )
     } else {
       None
     }
@@ -39,8 +39,8 @@ object Netstat extends Stat {
       val outOcteds = parts( 8 ).toFloat
       Some( ProcCategory( pid, "netstat",
         List(
-          ProcValue( "in_octets", ProcValueX[Float]( inOctets ) ),
-          ProcValue( "out_octets", ProcValueX[Float]( outOcteds ) ) ) ) )
+          ProcValue( "in_octets", ProcFloatValue( inOctets ) ),
+          ProcValue( "out_octets", ProcFloatValue( outOcteds ) ) ) ) )
     } else {
       None
     }
@@ -54,7 +54,7 @@ object Io extends Stat {
     val values = content.map { rec =>
       {
         val parts = rec.split( ":" )
-        ProcValue( parts( 0 ), ProcValueX[Float]( parts( 1 ).toFloat ) )
+        ProcValue( parts( 0 ), ProcFloatValue( parts( 1 ).toFloat ) )
       }
     }
     if ( values.length > 0 ) {
@@ -75,9 +75,9 @@ object PStat extends Stat {
       val sys = parts(14).toInt
       val sum = user + sys
       Some( ProcCategory( pid, "stat", List(
-          ProcValue( "cpu_user_sec",  ProcValueX[Int]( user ) ),
-          ProcValue( "cpu_sys_sec", ProcValueX[Int]( sys ) ),
-          ProcValue( "cpu_sum_sec", ProcValueX[Int]( sum ) )
+          ProcValue( "cpu_user_sec",  ProcIntValue( user ) ),
+          ProcValue( "cpu_sys_sec", ProcIntValue( sys ) ),
+          ProcValue( "cpu_sum_sec", ProcIntValue( sum ) )
       ) ) )
     } else {
       None
@@ -96,10 +96,10 @@ object Statm extends Stat {
       val share = parts( 2 ).toInt
       val data = parts( 5 ).toInt
       Some( ProcCategory( pid, "statm", List( 
-          ProcValue( "size", ProcValueX[Int]( size ) ),
-          ProcValue( "resident", ProcValueX[Int]( resident ) ),
-          ProcValue( "share", ProcValueX[Int]( share ) ),
-          ProcValue( "data", ProcValueX[Int]( data ) )          
+          ProcValue( "size", ProcIntValue( size ) ),
+          ProcValue( "resident", ProcIntValue( resident ) ),
+          ProcValue( "share", ProcIntValue( share ) ),
+          ProcValue( "data", ProcIntValue( data ) )          
       ) ) )
     } else {
       None
@@ -123,11 +123,11 @@ object Status extends Stat {
           case "MB" => 1024 * 1024
           case _ => 1
         }
-        ProcValue( vmName, ProcValueX[Int]( vmValue * factor ) )
+        ProcValue( vmName, ProcIntValue( vmValue * factor ) )
       })
 
       val threadCount = ProcValue( "thread_count", 
-          ProcValueX[Int]( content.filter( _.startsWith( "Threads:" ) )(0).split( ":" )(1).replaceAll( """^(\s+)""", "" ).toInt ) )
+          ProcIntValue( content.filter( _.startsWith( "Threads:" ) )(0).split( ":" )(1).replaceAll( """^(\s+)""", "" ).toInt ) )
       
       val values = threadCount :: vms 
       Some( ProcCategory( pid, "status", values ) )          
