@@ -10,15 +10,15 @@ import at.linuxhacker.procmetrics.values._
 @RunWith(classOf[JUnitRunner])
 class Tests extends FlatSpec {
 
-  "An ProcStringValue( 'tester' )" must "have the value 'tester'" in {
+  "An ProcStringValue 'tester'" must "have the value 'tester'" in {
     assert( ProcStringValue( "tester" ).value == "tester" )
   }
   
-  "ProcIntValue( 4 )" must "have the value 4" in {
+  "ProcIntValue 4" must "have the value 4" in {
     assert( ProcIntValue( 4 ).value == 4 )
   }
   
-  "ProcFloatValue( 3.1415 )" must "have the value 3.1415 " in {
+  "ProcFloatValue 3.1415" must "have the value 3.1415 " in {
     assert( ProcFloatValue( 3.1415f ).value == 3.1415f )
   }
   

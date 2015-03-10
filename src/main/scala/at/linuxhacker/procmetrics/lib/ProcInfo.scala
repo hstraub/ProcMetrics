@@ -16,28 +16,27 @@ object ProcFilter {
   
 }
 
-object ProcInfo {
-  private val pidPattern = """/proc/([0-9]+)""".r
+class ProcInfo( val root: String ) {
+  private val pidPattern = ( root + """([0-9]+)""" ).r
 
-  def getDirList(): List[String] = {
-    val path = new File( "/proc" )
+  def getDirList( ): List[String] = {
+    val path = new File( root )
     path.listFiles.filter( _.isDirectory ).filter( rec => {
       rec.toString match {
         case pidPattern( pid ) => true
         case _ => false
       }
-    } ).map( _.toString ).toList
+    } )
+      .map( x => x.toString match { case pidPattern( pid ) => pid } )
+      .map( _.toString ).toList
   }
 
-  def getCommandList( dirList: List[String] ): List[Pid] = {
-    dirList.map { dir =>
+  def getCommandList( pids: List[String] ): List[Pid] = {
+    pids.map { pid =>
       {
-        val records = getFileContent( dir + "/cmdline" )
+        val records = getFileContent( pid + "/cmdline" )
         if ( records.length > 0 ) {
-          dir match {
-            case pidPattern( pid ) => Some( Pid( pid, records( 0 ).replace( "\0", " " ) ) )
-            case _ => None
-          }
+          Some( Pid( pid, records( 0 ).replace( "\u0000", " " ) ) )
         } else {
           None
         }
@@ -58,19 +57,19 @@ object ProcInfo {
           pids.map {
             pid =>
               {
-                val records = getFileContent( "/proc/" + pid.pid + "/" + stat.getFilename )
+                val records = getFileContent(  pid.pid + "/" + stat.getFilename )
                 stat.getStat( pid, records )
               }
           }
         }
           .filter( x => x match { case Some( s ) => true case _ => false } )
-          .map( x => x match { case Some( s ) => s case _ => throw new Exception( "Impmentation error." ) } )
+          .map( x => x match { case Some( s ) => s case _ => null } )
     }.flatten
   }
 
   def getGlobals( globals: List[Global] ): List[ProcGlobal] = {
     globals.map { g =>
-      val records = getFileContent( "/proc/" + g.getFilename )
+      val records = getFileContent( g.getFilename )
       g.getStat( records )
     }.filter( x => x match { case Some( s ) => true case _ => false } )
       .map( x => x match { case Some( s ) => s case _ => null } )
@@ -79,15 +78,15 @@ object ProcInfo {
   def getMultiGlobals( globals: List[MultiGlobalStatsSpecifier] ): List[MultiGlobalStatsResult] = {
     globals.map( spec => {
       val g = spec.stats
-      val records = getFileContent( "/proc/" + g.getFilename )
+      val records = getFileContent( g.getFilename )
       val res = g.getStat( records )
       MultiGlobalStatsResult( spec.name, res )
     })
   }
 
-  private def getFileContent( filename: String ): List[String] = {
+  def getFileContent( filename: String ): List[String] = {
     try {
-      val source = scala.io.Source.fromFile( filename )
+      val source = scala.io.Source.fromFile( root + filename )
       var records = source.getLines.toList
       source.close
       records

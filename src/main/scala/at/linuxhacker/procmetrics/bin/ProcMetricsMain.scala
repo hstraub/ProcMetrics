@@ -10,12 +10,13 @@ import at.linuxhacker.procmetrics.values._
 object ProcMetricsMain {
 
   def main( args: Array[String] ): Unit = {
-    val dirList = ProcInfo.getDirList()
-    val pids = ProcInfo.getCommandList( dirList )
-    val filteredPids = ProcInfo.filterPids( ProcFilter.patternFilter )( "g", pids )
-    val stats = ProcInfo.getStat( List( Schedstat, Netstat, Io, Statm, Status, PStat ), filteredPids )
-    val globals = ProcInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
-    val multiGlobalsStat = ProcInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
+    val procInfo = new ProcInfo( "/proc/" )
+    val dirList = procInfo.getDirList()
+    val pids = procInfo.getCommandList( dirList )
+    val filteredPids = procInfo.filterPids( ProcFilter.patternFilter )( "g", pids )
+    val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), filteredPids )
+    val globals = procInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
+    val multiGlobalsStat = procInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
 
     println( ProcConverters.toJson( globals, stats, multiGlobalsStat ) )
   }
@@ -33,24 +34,25 @@ object ProcMetricsMonitor {
 
 
     while ( true ) {
-      val dirList = ProcInfo.getDirList()
-      val pids = ProcInfo.getCommandList( dirList )
+      val procInfo = new ProcInfo( "/proc/" )
+      val dirList = procInfo.getDirList()
+      val pids = procInfo.getCommandList( dirList )
       val filteredPids = {
         if ( args.length > 0 )
-          ProcInfo.filterPids( ProcFilter.patternFilter )( args(0), pids )
+          procInfo.filterPids( ProcFilter.patternFilter )( args(0), pids )
         else
-          ProcInfo.filterPids( ProcFilter.nullFilter )( "", pids )
+          procInfo.filterPids( ProcFilter.nullFilter )( "", pids )
       }
       val filteredPidsToCmdlineMap = filteredPids.map( x => x.pid -> x.cmdline  ).toMap
       val t1 = MonitorFunctions.transformToColumns(
-        ProcInfo.getStat( List( Schedstat, Netstat, Io, Statm, Status, PStat ),
+        procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ),
           filteredPids ),
         columns )
 
       Thread.sleep( 1000 )
 
       val t2 = MonitorFunctions.transformToColumns(
-        ProcInfo.getStat( List( Schedstat, Netstat, Io, Statm, Status, PStat ),
+        procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ),
           filteredPids ),
         columns )
 

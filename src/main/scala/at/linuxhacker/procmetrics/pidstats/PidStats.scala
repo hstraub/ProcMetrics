@@ -28,25 +28,6 @@ object Schedstat extends Stat {
   }
 }
 
-object Netstat extends Stat {
-  def getFilename() = { "net/netstat" }
-
-  def getStat( pid: Pid, content: List[String] ): Option[ProcCategory] = {
-    if ( content.length > 0 ) {
-      val ipExt = content.filter( rec => rec.startsWith( "IpExt:" ) )
-      val parts = ipExt( 1 ).split( " " )
-      val inOctets = parts( 7 ).toFloat
-      val outOcteds = parts( 8 ).toFloat
-      Some( ProcCategory( pid, "netstat",
-        List(
-          ProcValue( "in_octets", ProcFloatValue( inOctets ) ),
-          ProcValue( "out_octets", ProcFloatValue( outOcteds ) ) ) ) )
-    } else {
-      None
-    }
-  }
-}
-
 object Io extends Stat {
   def getFilename() = { "io" }
 
