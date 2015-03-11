@@ -98,10 +98,10 @@ object Status extends Stat {
         val parts = rec.split( ":" )
         val vmName = parts(0)
         val memparts = parts(1).replaceAll( """^(\s+)""", "" ).split( " " )
-        val vmValue = memparts(0).toInt
+        val vmValue = memparts(0).toFloat
         val factor = memparts(1) match {
-          case "kB" => 1024
-          case "MB" => 1024 * 1024
+          case "kB" => 1024f
+          case "MB" => 1024f * 1024f
           case _ => 1
         }
         ProcValue( vmName, ValueFactory.create( vmValue * factor ) )

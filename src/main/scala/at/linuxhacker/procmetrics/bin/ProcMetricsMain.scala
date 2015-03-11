@@ -65,7 +65,7 @@ object ProcMetricsQemu {
           ( x: String ) => ValueFactory.create( x.toInt ) ),
       ExtractInfo( "name", """.*-name (\S+).*""".r, 
           ( x: String ) => ValueFactory.create( x ) ),
-      ExtractInfo( "net_id", """.*-device [^ ]+,netdev=hostnet[\d]+,id=([^, ]+).*""".r,
+      ExtractInfo( "mac", """.*mac=([^, ]+).*""".r,
           ( x: String ) => ValueFactory.create( x ) ) )
 
   private def extractValues( cmdline: String ): List[ProcValue] = {
