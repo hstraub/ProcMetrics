@@ -13,7 +13,7 @@ object GlobalUptime extends Global {
     if ( content.length > 0 ) {
       Some( ProcGlobal( "uptime",
         List( ProcValue( "uptime_sec",
-          ProcFloatValue( content( 0 ).split( " " )( 0 ).toFloat ) ) ) ) )
+          ValueFactory.create( content( 0 ).split( " " )( 0 ).toFloat ) ) ) ) )
     } else {
       None
     }
@@ -31,11 +31,11 @@ object Cpuinfo extends Global {
       Some( ProcGlobal( "cpuinfo",
         List( 
             ProcValue( "processor_count",
-        		ProcIntValue( processorCount ) ),
+        		ValueFactory.create( processorCount ) ),
         	ProcValue( "model_name",
-        	    ProcStringValue( modelName ) ),
+        	    ValueFactory.create( modelName ) ),
         	ProcValue( "cpu_mhz", 
-        	    ProcFloatValue( cpuMhz ) )
+        	    ValueFactory.create( cpuMhz ) )
         	)
       ) )
     } else {
@@ -52,11 +52,11 @@ object Loadavg extends Global {
       Some( ProcGlobal( "loadavg",
         List( 
             ProcValue( "load_1m",
-        		ProcFloatValue( parts( 0 ).toFloat ) ),
+        		ValueFactory.create( parts( 0 ).toFloat ) ),
         	ProcValue( "load_5m",
-        	    ProcFloatValue( parts( 1 ).toFloat ) ),
+        	    ValueFactory.create( parts( 1 ).toFloat ) ),
         	ProcValue( "load_10m", 
-        	    ProcFloatValue( parts( 2 ).toFloat ) )
+        	    ValueFactory.create( parts( 2 ).toFloat ) )
         	)
       ) )
     } else {
@@ -91,8 +91,8 @@ object NetDev extends MultiGlobalStats {
       	.filter( x => x match { case Some(y) => true case _ => false } )
       	.map( _ match { case Some(y) => y case _ => throw new Exception( "Not possible" ) } )
       	.map( x => ProcGlobal( x.name, List( 
-      	    ProcValue( "recv_bytes", ProcFloatValue( x.recbytes ) ),
-      	    ProcValue( "trans_bytes", ProcFloatValue( x.transbytes ) ) ) ) )
+      	    ProcValue( "recv_bytes", ValueFactory.create( x.recbytes ) ),
+      	    ProcValue( "trans_bytes", ValueFactory.create( x.transbytes ) ) ) ) )
     } else {
       List[ProcGlobal]( )
     }

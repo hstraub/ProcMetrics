@@ -18,12 +18,63 @@ object ProcMetricsMain {
     val procInfo = new ProcInfo( "/proc/" )
     val dirList = procInfo.getDirList()
     val pids = procInfo.getCommandList( dirList )
-    val filteredPids = procInfo.filterPids( ProcFilter.patternFilter )( "g", pids )
+    val filteredPids = {
+      if ( args.length > 0 )
+        procInfo.filterPids( ProcFilter.patternFilter )( args( 0 ), pids )
+      else
+        procInfo.filterPids( ProcFilter.nullFilter )( "", pids )
+    }
     val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), filteredPids )
     val globals = procInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
     val multiGlobalsStat = procInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
 
     println( ProcConverters.toJson( globals, stats, multiGlobalsStat ).toString )
+  }
+}
+
+object ProcMetricsQemu {
+  
+  def main( args: Array[String] ): Unit = {
+    val procInfo = new ProcInfo( "/proc/" )
+    val dirList = procInfo.getDirList()
+    val pids = procInfo.getCommandList( dirList )
+    val qemuPids = procInfo.filterPids( ProcFilter.patternFilter )( "qemu", pids )
+    val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), qemuPids )
+    val globals = procInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
+    val multiGlobalsStat = procInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
+
+    val data1 = ProcConverters.toJson( globals, stats, multiGlobalsStat )
+    
+    val qemuDescriptions = qemuPids.map( x => ProcGlobal( x.pid, extractValues( x.cmdline ) ) )
+    val data2 = ProcConverters.globalsToJson( qemuDescriptions )
+    val jsonTransformer = (__).json.update( 
+        __.read[JsObject].map { o =>  
+          o ++ Json.obj( "qemu_parameter" -> data2 ) } )
+          
+    data1.transform( jsonTransformer ) match {
+      case JsSuccess( result, x ) => println ( result )
+      case _ => throw new Exception ( "unbelievable..." )
+    }
+  }
+  
+  private case class ExtractInfo( name: String, 
+      regex: scala.util.matching.Regex, f:( String ) => ProcGenValue )
+  
+  private val infoList = List( 
+      ExtractInfo( "memory", """.*-m (\d+).*""".r, 
+          ( x: String ) => ValueFactory.create( x.toInt ) ),
+      ExtractInfo( "name", """.*-name (\S+).*""".r, 
+          ( x: String ) => ValueFactory.create( x ) ),
+      ExtractInfo( "net_id", """.*-device [^ ]+,netdev=hostnet[\d]+,id=([^, ]+).*""".r,
+          ( x: String ) => ValueFactory.create( x ) ) )
+
+  private def extractValues( cmdline: String ): List[ProcValue] = {
+    infoList.map( item =>
+      cmdline match {
+        case item.regex( x ) =>
+          ProcValue( item.name, item.f( x ) )
+        case _ =>
+          throw new Exception( "Cannot find regex: " +item.regex + " in commandline: " + cmdline ) } )
   }
 }
 

@@ -20,6 +20,12 @@ object ValueConverters {
   implicit def i2f( x: ProcIntValue ): ProcFloatValue = ProcFloatValue( x.value )
 }
 
+object ValueFactory {
+  def create( x: String ): ProcGenValue = { ProcStringValue( x )  }
+  def create( x: Float ): ProcGenValue = { ProcFloatValue( x ) }
+  def create( x: Int ): ProcGenValue = { ProcIntValue( x ) }
+}
+
 case class ProcValue( name: String, value: ProcGenValue )
 case class ProcCategory( pid: Pid, category: String, values: List[ProcValue] )
 case class ProcGlobal( category: String, values: List[ProcValue] )

@@ -33,14 +33,14 @@ object ProcConverters {
     jsonData
   }
   
-  private def globalsToJson( globals:  List[ProcGlobal] ): List[JsObject] = {
+  def globalsToJson( globals:  List[ProcGlobal] ): List[JsObject] = {
     globals.map( item => {
       val valueList = item.values.map( procValueToJson( _ ) )
       Json.obj( item.category -> valueList )
     })
   }
   
-  private def procValueToJson( v: ProcValue): JsObject = {
+  def procValueToJson( v: ProcValue): JsObject = {
         val x = v.value match {
           case a: ProcStringValue => JsString( a.value  )
           case a: ProcIntValue => JsNumber( a.value  )
