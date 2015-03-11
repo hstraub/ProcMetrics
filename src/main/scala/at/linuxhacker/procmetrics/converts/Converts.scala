@@ -11,7 +11,7 @@ case class StatStatsResult( result: List[ProcCategory] ) extends StatResult
 
 object ProcConverters {
 
-  def toJson( globals: List[ProcGlobal], stats: List[ProcCategory], multiGlobals: List[MultiGlobalStatsResult] ): String = {
+  def toJson( globals: List[ProcGlobal], stats: List[ProcCategory], multiGlobals: List[MultiGlobalStatsResult] ): JsObject = {
     var pidGroup = stats.groupBy( _.pid.pid )
     
     val globalsList = globalsToJson( globals )
@@ -30,7 +30,7 @@ object ProcConverters {
     val jsonData = Json.obj( "globals" -> globalsList, "stats" -> jsonStats, "multi" -> jsonMultiStats)
     
     
-    jsonData.toString
+    jsonData
   }
   
   private def globalsToJson( globals:  List[ProcGlobal] ): List[JsObject] = {
