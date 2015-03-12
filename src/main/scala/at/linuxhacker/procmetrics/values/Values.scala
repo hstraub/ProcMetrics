@@ -29,3 +29,4 @@ object ValueFactory {
 case class ProcValue( name: String, value: ProcGenValue )
 case class ProcCategory( pid: Pid, category: String, values: List[ProcValue] )
 case class ProcGlobal( category: String, values: List[ProcValue] )
+case class ProcCategory2( pid: Pid, keyValue: ProcGlobal )

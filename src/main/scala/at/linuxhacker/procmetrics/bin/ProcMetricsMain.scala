@@ -65,7 +65,7 @@ object ProcMetricsQemu {
     val data2 = ProcConverters.globalsToJson( qemuDescriptions )
     val jsonTransformer = (__).json.update( 
         __.read[JsObject].map { o =>  
-          o ++ Json.obj( "qemu_parameter" -> data2 ) } )
+          o ++ Json.obj( "qemu_parameter" -> JsObject( data2 ) ) } )
           
     data1.transform( jsonTransformer ) match {
       case JsSuccess( result, x ) => println ( result )
