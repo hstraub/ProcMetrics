@@ -4,6 +4,7 @@ import at.linuxhacker.procmetrics.values._
 import at.linuxhacker.procmetrics.global._
 import at.linuxhacker.procmetrics.pidstats._
 import java.io.File
+import at.linuxhacker.procmetrics.sysfs.NetMac
 
 object ProcFilter {
   def patternFilter( pattern: String, pids: List[Pid] ): List[Pid] = {
@@ -83,7 +84,18 @@ class ProcInfo( val root: String ) {
       MultiGlobalStatsResult( spec.name, res )
     })
   }
-
+  
+  def getSysfsNetMac( netDeviceNames: List[String] ): List[ProcGlobal] = {
+    netDeviceNames.map( netDeviceName => {
+      val content = getFileContent( NetMac.getFilename( netDeviceName ) )
+      if ( content.length > 0 )
+        NetMac.getStat( netDeviceName, content )
+      else
+        None
+    } ).filter( x => x != None )
+       .map( i => i match { case Some( s ) => s case _ => throw new Exception( "Unbelievable" ) } )
+  }
+  
   def getFileContent( filename: String ): List[String] = {
     try {
       val source = scala.io.Source.fromFile( root + filename )

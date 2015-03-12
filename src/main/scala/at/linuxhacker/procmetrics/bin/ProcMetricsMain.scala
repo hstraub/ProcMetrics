@@ -12,40 +12,56 @@ import play.api.libs.functional.syntax._
 import at.linuxhacker.procmetrics.couchdb.CouchDb
 import at.linuxhacker.procmetrics.lib._
 
-object ProcMetricsMain {
+object Statistics {
 
-  def main( args: Array[String] ): Unit = {
+  case class Result( filteredPids: List[Pid], globals: List[ProcGlobal], stats: List[ProcCategory],
+    multiGlobalsStat: List[MultiGlobalStatsResult], sysStat: List[ProcGlobal] ) {
+
+    def toJson( ): JsObject = {
+      ProcConverters.toJson( globals, stats, multiGlobalsStat, sysStat )
+    }
+
+  }
+  
+  def get( filter: ( String, List[Pid] )  => List[Pid], filterPattern: String ): Result = {
     val procInfo = new ProcInfo( "/" )
     val dirList = procInfo.getPidDirList()
     val pids = procInfo.getCommandList( dirList )
-    val filteredPids = {
-      if ( args.length > 0 )
-        procInfo.filterPids( ProcFilter.patternFilter )( args( 0 ), pids )
-      else
-        procInfo.filterPids( ProcFilter.nullFilter )( "", pids )
-    }
+    val filteredPids = procInfo.filterPids( filter )( filterPattern, pids )
     val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), filteredPids )
     val globals = procInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
     val multiGlobalsStat = procInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
+    val netDeviceNames = multiGlobalsStat
+    	.filter( x => x.name == "NetDev" )
+    	.map( x => x.result.map( y => y.category ) )
+    	.flatten
+    val sysStat = procInfo.getSysfsNetMac( netDeviceNames )
+    Result( filteredPids, globals, stats, multiGlobalsStat, sysStat )
+  }
+  
+}
 
-    println( ProcConverters.toJson( globals, stats, multiGlobalsStat ).toString )
+object ProcMetricsMain {
+
+  def main( args: Array[String] ): Unit = {
+    val filterPattern = {
+      if ( args.length > 0 )
+        args(0)
+      else
+        ""
+    }
+    
+    println( Statistics.get( ProcFilter.patternFilter, filterPattern ).toJson.toString )
   }
 }
 
 object ProcMetricsQemu {
   
   def main( args: Array[String] ): Unit = {
-    val procInfo = new ProcInfo( "/" )
-    val dirList = procInfo.getPidDirList()
-    val pids = procInfo.getCommandList( dirList )
-    val qemuPids = procInfo.filterPids( ProcFilter.patternFilter )( "qemu", pids )
-    val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), qemuPids )
-    val globals = procInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
-    val multiGlobalsStat = procInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
-
-    val data1 = ProcConverters.toJson( globals, stats, multiGlobalsStat )
+    val result =Statistics.get( ProcFilter.patternFilter, "qemu" )
+    val data1 = result.toJson
     
-    val qemuDescriptions = qemuPids.map( x => ProcGlobal( x.pid, extractValues( x.cmdline ) ) )
+    val qemuDescriptions = result.filteredPids.map( x => ProcGlobal( x.pid, extractValues( x.cmdline ) ) )
     val data2 = ProcConverters.globalsToJson( qemuDescriptions )
     val jsonTransformer = (__).json.update( 
         __.read[JsObject].map { o =>  
@@ -122,25 +138,19 @@ object ProcMetricsCouchDb {
   }
   
   private def sendMetrics( result: Option[ProcMetricsCouchDb.Config] ): Unit = {
-    val procInfo = new ProcInfo( "/" )
-    val dirList = procInfo.getPidDirList()
-    val pids = procInfo.getCommandList( dirList )
+    
+    val timestamp = ( System.currentTimeMillis / 1000 ).toInt
+    val docId = result.get.docNamePrefix + "_" + timestamp
+    val docType = result.get.docType
+    val url = result.get.couchdbUrl + "/" + result.get.database + "/" + docId 
     val filter: ( String, List[Pid] )  => List[Pid] = {
       if ( result.get.filter != "" )
         ProcFilter.patternFilter
       else
         ProcFilter.nullFilter
     }
-    val filteredPids = procInfo.filterPids( filter )( result.get.filter, pids )
-    val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), filteredPids )
-    val globals = procInfo.getGlobals( List( GlobalUptime, Cpuinfo, Loadavg ) )
-    val multiGlobalsStat = procInfo.getMultiGlobals( List( MultiGlobalStatsSpecifier( "NetDev", NetDev ) ) )
-
-    val timestamp = ( System.currentTimeMillis / 1000 ).toInt
-    val docId = result.get.docNamePrefix + "_" + timestamp
-    val docType = result.get.docType
-    val url = result.get.couchdbUrl + "/" + result.get.database + "/" + docId 
-    val data = ProcConverters.toJson( globals, stats, multiGlobalsStat )
+    val data = Statistics.get(filter, result.get.filter ).toJson
+    
     val jsonTransformer = ( __ ).json.update(
       __.read[JsObject].map { o => {
             var x = o ++ Json.obj( "_id" -> docId )
