@@ -18,19 +18,19 @@ class Tests extends FlatSpec {
   private val procInfo = new ProcInfo( testset )
   
   private val results = List[Testcase](
-      Testcase( procInfo.getFileContent( "cpuinfo" ),
+      Testcase( procInfo.getFileContent( "proc/cpuinfo" ),
             Cpuinfo,
             ProcGlobal( "cpuinfo", List( 
     		  ProcValue( "processor_count", ProcIntValue( 4 ) ),
     		  ProcValue( "model_name", ProcStringValue( "Intel(R) Core(TM) i5-2400 CPU @ 3.10GHz" ) ),
     		  ProcValue( "cpu_mhz", ProcFloatValue( 1600f ) ) ) )
       ),
-      Testcase( procInfo.getFileContent( "uptime"),
+      Testcase( procInfo.getFileContent( "proc/uptime"),
             GlobalUptime,
       	    ProcGlobal( "uptime", List(
       	        ProcValue( "uptime_sec", ProcFloatValue( 9409.98f ) ) ) )
       ),
-      Testcase( procInfo.getFileContent( "loadavg" ),
+      Testcase( procInfo.getFileContent( "proc/loadavg" ),
       Loadavg,
       ProcGlobal( "loadavg", List (
           ProcValue( "load_1m", ProcFloatValue( 0.55f ) ),
@@ -48,8 +48,8 @@ class Tests extends FlatSpec {
   
   results.foreach( test => {
     
-    test.result.category + " filename" must "be " + test.result.category in {
-      assert( test.f.getFilename == test.result.category )
+    test.result.category + " filename" must "containing " + test.result.category in {
+      assert( test.f.getFilename contains test.result.category )
     }
     
     test.result.category + " ProcGlobal Category" must "be " + test.result.category in {

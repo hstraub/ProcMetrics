@@ -17,10 +17,10 @@ object ProcFilter {
 }
 
 class ProcInfo( val root: String ) {
-  private val pidPattern = ( root + """([0-9]+)""" ).r
+  private val pidPattern = ( root + """proc/([0-9]+)""" ).r
 
-  def getDirList( ): List[String] = {
-    val path = new File( root )
+  def getPidDirList( ): List[String] = {
+    val path = new File( root + "proc" )
     path.listFiles.filter( _.isDirectory ).filter( rec => {
       rec.toString match {
         case pidPattern( pid ) => true
@@ -34,7 +34,7 @@ class ProcInfo( val root: String ) {
   def getCommandList( pids: List[String] ): List[Pid] = {
     pids.map { pid =>
       {
-        val records = getFileContent( pid + "/cmdline" )
+        val records = getFileContent( "proc/" + pid + "/cmdline" )
         if ( records.length > 0 ) {
           Some( Pid( pid, records( 0 ).replace( "\u0000", " " ) ) )
         } else {
@@ -57,7 +57,7 @@ class ProcInfo( val root: String ) {
           pids.map {
             pid =>
               {
-                val records = getFileContent(  pid.pid + "/" + stat.getFilename )
+                val records = getFileContent(  "proc/" + pid.pid + "/" + stat.getFilename )
                 stat.getStat( pid, records )
               }
           }
@@ -92,6 +92,8 @@ class ProcInfo( val root: String ) {
       records
 
     } catch {
+      // TODO: not ideal! What we can do?
+      case e: Exception => println( e.getMessage( ) ); List( )
       case _: Throwable => List()
     }
   }

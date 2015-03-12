@@ -107,7 +107,7 @@ class Tests extends FlatSpec {
   def doTestsForTestset( testset: String, targetCategories: List[ProcCategory] ) = {
 
     val procInfo = new ProcInfo( testset )
-    val pids = procInfo.getDirList
+    val pids = procInfo.getPidDirList
     val pidMap = targetCategories.map( x => { x.pid.pid -> x.pid.cmdline } ).toMap
 
     "PID list in " + testset must "have length " + pidMap.size in {

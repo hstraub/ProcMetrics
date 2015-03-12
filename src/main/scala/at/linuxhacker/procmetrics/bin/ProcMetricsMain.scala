@@ -15,8 +15,8 @@ import at.linuxhacker.procmetrics.lib._
 object ProcMetricsMain {
 
   def main( args: Array[String] ): Unit = {
-    val procInfo = new ProcInfo( "/proc/" )
-    val dirList = procInfo.getDirList()
+    val procInfo = new ProcInfo( "/" )
+    val dirList = procInfo.getPidDirList()
     val pids = procInfo.getCommandList( dirList )
     val filteredPids = {
       if ( args.length > 0 )
@@ -35,8 +35,8 @@ object ProcMetricsMain {
 object ProcMetricsQemu {
   
   def main( args: Array[String] ): Unit = {
-    val procInfo = new ProcInfo( "/proc/" )
-    val dirList = procInfo.getDirList()
+    val procInfo = new ProcInfo( "/" )
+    val dirList = procInfo.getPidDirList()
     val pids = procInfo.getCommandList( dirList )
     val qemuPids = procInfo.filterPids( ProcFilter.patternFilter )( "qemu", pids )
     val stats = procInfo.getStat( List( Schedstat, Io, Statm, Status, PStat ), qemuPids )
@@ -122,8 +122,8 @@ object ProcMetricsCouchDb {
   }
   
   private def sendMetrics( result: Option[ProcMetricsCouchDb.Config] ): Unit = {
-    val procInfo = new ProcInfo( "/proc/" )
-    val dirList = procInfo.getDirList()
+    val procInfo = new ProcInfo( "/" )
+    val dirList = procInfo.getPidDirList()
     val pids = procInfo.getCommandList( dirList )
     val filter: ( String, List[Pid] )  => List[Pid] = {
       if ( result.get.filter != "" )
@@ -180,8 +180,8 @@ object ProcMetricsMonitor {
 
 
     while ( true ) {
-      val procInfo = new ProcInfo( "/proc/" )
-      val dirList = procInfo.getDirList()
+      val procInfo = new ProcInfo( "/" )
+      val dirList = procInfo.getPidDirList()
       val pids = procInfo.getCommandList( dirList )
       val filteredPids = {
         if ( args.length > 0 )

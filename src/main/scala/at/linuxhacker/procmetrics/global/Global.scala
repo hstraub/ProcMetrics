@@ -8,7 +8,7 @@ abstract class Global {
 }
 
 object GlobalUptime extends Global {
-  def getFilename(): String = { "uptime" }
+  def getFilename(): String = { "proc/uptime" }
   def getStat( content: List[String] ): Option[ProcGlobal] = {
     if ( content.length > 0 ) {
       Some( ProcGlobal( "uptime",
@@ -22,7 +22,7 @@ object GlobalUptime extends Global {
 }
 
 object Cpuinfo extends Global {
-  def getFilename( ): String = { "cpuinfo" }
+  def getFilename( ): String = { "proc/cpuinfo" }
   def getStat( content: List[String] ): Option[ProcGlobal] = {
     if ( content.length > 0 ) {
       var processorCount = content.filter( _.startsWith( "processor") ).length;
@@ -45,7 +45,7 @@ object Cpuinfo extends Global {
 }
 
 object Loadavg extends Global {
-  def getFilename( ): String = { "loadavg" }
+  def getFilename( ): String = { "proc/loadavg" }
   def getStat( content: List[String] ): Option[ProcGlobal] = {
     if ( content.length > 0 ) {
       val parts = content(0).split( " " )
@@ -75,7 +75,7 @@ case class MultiGlobalStatsSpecifier( name: String, stats: MultiGlobalStats )
 case class MultiGlobalStatsResult( name: String, result: List[ProcGlobal] )
 
 object NetDev extends MultiGlobalStats {
-  def getFilename( ): String = { "net/dev" }
+  def getFilename( ): String = { "proc/net/dev" }
   def getStat( content: List[String] ): List[ProcGlobal] = {
     case class Netstat( name: String, recbytes: Float, transbytes: Float )
     if ( content.length > 0 ) {
