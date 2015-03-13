@@ -12,7 +12,7 @@ object GlobalUptime extends Global {
   def getStat( content: List[String] ): Option[ProcGlobal] = {
     if ( content.length > 0 ) {
       Some( ProcGlobal( "uptime",
-        List( ProcValue( "uptime_sec",
+        List( ProcValueFactory.create( "uptime_sec",
           ValueFactory.create( content( 0 ).split( " " )( 0 ).toFloat ) ) ) ) )
     } else {
       None
@@ -30,11 +30,11 @@ object Cpuinfo extends Global {
       var cpuMhz = content.filter( _.startsWith( "cpu MHz" ) )(0).split( ":" )(1).replaceAll( """^( *)""", "" ).toFloat
       Some( ProcGlobal( "cpuinfo",
         List( 
-            ProcValue( "processor_count",
+            ProcValueFactory.create( "processor_count",
         		ValueFactory.create( processorCount ) ),
-        	ProcValue( "model_name",
+        	ProcValueFactory.create( "model_name",
         	    ValueFactory.create( modelName ) ),
-        	ProcValue( "cpu_mhz", 
+        	ProcValueFactory.create( "cpu_mhz", 
         	    ValueFactory.create( cpuMhz ) )
         	)
       ) )
@@ -51,11 +51,11 @@ object Loadavg extends Global {
       val parts = content(0).split( " " )
       Some( ProcGlobal( "loadavg",
         List( 
-            ProcValue( "load_1m",
+            ProcValueFactory.create( "load_1m",
         		ValueFactory.create( parts( 0 ).toFloat ) ),
-        	ProcValue( "load_5m",
+        	ProcValueFactory.create( "load_5m",
         	    ValueFactory.create( parts( 1 ).toFloat ) ),
-        	ProcValue( "load_10m", 
+        	ProcValueFactory.create( "load_10m", 
         	    ValueFactory.create( parts( 2 ).toFloat ) )
         	)
       ) )
@@ -79,20 +79,22 @@ object NetDev extends MultiGlobalStats {
   def getStat( content: List[String] ): List[ProcGlobal] = {
     case class Netstat( name: String, recbytes: Float, transbytes: Float )
     if ( content.length > 0 ) {
-      val pattern ="""^([a-zA-Z0-9]+):""".r
+      val pattern ="""^([a-zA-Z0-9]+):(.*)""".r
       val extract = content.map( rec => {
-        val parts = rec.replaceAll( """^( +)""", "").replaceAll( """( +)""", " " ).split( " " )
-        parts( 0 ) match {
-          case pattern( name ) => Some( Netstat( name, parts( 1 ).toFloat, parts( 9 ).toFloat ) )
-          case _ => None
+        val leftRight = rec.replaceAll( """^( +)""", "").replaceAll( """( +)""", " " ).split( ":" )
+        if ( leftRight.length == 2 ) {
+          val parts = leftRight(1).replaceAll( """^( +)""", "").split( " " )
+          Some( Netstat( leftRight(0), parts( 0 ).toFloat, parts( 8 ).toFloat ) )
+        } else {
+          None
         }
       } )
       extract
       	.filter( x => x match { case Some(y) => true case _ => false } )
       	.map( _ match { case Some(y) => y case _ => throw new Exception( "Not possible" ) } )
       	.map( x => ProcGlobal( x.name, List( 
-      	    ProcValue( "recv_bytes", ValueFactory.create( x.recbytes ) ),
-      	    ProcValue( "trans_bytes", ValueFactory.create( x.transbytes ) ) ) ) )
+      	    ProcValueFactory.create( "recv_bytes", ValueFactory.create( x.recbytes ) ),
+      	    ProcValueFactory.create( "trans_bytes", ValueFactory.create( x.transbytes ) ) ) ) )
     } else {
       List[ProcGlobal]( )
     }

@@ -52,7 +52,7 @@ class Tests extends FlatSpec {
     }
 
     testname + " device " + netdevice.name must "have the mac Adress " + netdevice.mac in {
-      assert( result.values( 0 ).value == ValueFactory.create( netdevice.mac ) )
+      assert( result.values( 0 ).values(0) == ValueFactory.create( netdevice.mac ) )
     }
   }
   

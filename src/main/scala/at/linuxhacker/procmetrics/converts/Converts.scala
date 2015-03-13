@@ -48,12 +48,19 @@ object ProcConverters {
   }
   
   def procValueToJson( v: ProcValue): ( String, JsValue ) = {
-    val x = v.value match {
-      case a: ProcStringValue => JsString( a.value )
-      case a: ProcIntValue => JsNumber( a.value )
-      case a: ProcFloatValue => JsNumber( a.value )
-    }
-    ( v.name -> x )
-  }
+    val jsonValues = v.values.map( singleValue => {
+      val singleJsonValue = singleValue match {
+        case a: ProcStringValue => JsString( a.value )
+        case a: ProcIntValue    => JsNumber( a.value )
+        case a: ProcFloatValue  => JsNumber( a.value )
+      }
+      singleJsonValue
+    } )
+    
+    if ( jsonValues.length > 1 )
+      ( v.name -> JsArray( jsonValues ) )
+    else
+      ( v.name -> jsonValues(0) )
+ }
   
 }

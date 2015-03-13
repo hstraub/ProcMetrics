@@ -21,21 +21,21 @@ class Tests extends FlatSpec {
       Testcase( procInfo.getFileContent( "proc/cpuinfo" ),
             Cpuinfo,
             ProcGlobal( "cpuinfo", List( 
-    		  ProcValue( "processor_count", ProcIntValue( 4 ) ),
-    		  ProcValue( "model_name", ProcStringValue( "Intel(R) Core(TM) i5-2400 CPU @ 3.10GHz" ) ),
-    		  ProcValue( "cpu_mhz", ProcFloatValue( 1600f ) ) ) )
+    		  ProcValueFactory.create( "processor_count", ValueFactory.create( 4 ) ),
+    		  ProcValueFactory.create( "model_name", ValueFactory.create( "Intel(R) Core(TM) i5-2400 CPU @ 3.10GHz" ) ),
+    		  ProcValueFactory.create( "cpu_mhz", ValueFactory.create( 1600f ) ) ) )
       ),
       Testcase( procInfo.getFileContent( "proc/uptime"),
             GlobalUptime,
       	    ProcGlobal( "uptime", List(
-      	        ProcValue( "uptime_sec", ProcFloatValue( 9409.98f ) ) ) )
+      	        ProcValueFactory.create( "uptime_sec", ValueFactory.create( 9409.98f ) ) ) )
       ),
       Testcase( procInfo.getFileContent( "proc/loadavg" ),
       Loadavg,
       ProcGlobal( "loadavg", List (
-          ProcValue( "load_1m", ProcFloatValue( 0.55f ) ),
-          ProcValue( "load_5m", ProcFloatValue( 0.26f ) ),
-          ProcValue( "load_10m", ProcFloatValue( 0.20f ) ) ) )
+          ProcValueFactory.create( "load_1m", ValueFactory.create( 0.55f ) ),
+          ProcValueFactory.create( "load_5m", ValueFactory.create( 0.26f ) ),
+          ProcValueFactory.create( "load_10m", ValueFactory.create( 0.20f ) ) ) )
       )
   )
   
@@ -73,8 +73,8 @@ class Tests extends FlatSpec {
       }
     }
     for ( ( x, i ) <- test.result.values.zipWithIndex ) {
-      ( "ProcValue value " + i ) must ( "be " + x.value.value ) in {
-        assert( values( i ).value == test.result.values( i ).value )
+      ( "ProcValue value " + i ) must ( "be " + x.values(0) ) in {
+        assert( values( i ).values(0) == test.result.values( i ).values(0) )
       }
     }
 

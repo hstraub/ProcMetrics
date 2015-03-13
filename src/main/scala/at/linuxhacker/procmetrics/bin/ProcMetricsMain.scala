@@ -79,18 +79,25 @@ object ProcMetricsQemu {
   private val infoList = List( 
       ExtractInfo( "memory", """.*-m (\d+).*""".r, 
           ( x: String ) => ValueFactory.create( x.toInt ) ),
-      ExtractInfo( "name", """.*-name (\S+).*""".r, 
+      ExtractInfo( "name", """.*-name ([a-zA-Z1-9\-_]+).*""".r, 
           ( x: String ) => ValueFactory.create( x ) ),
-      ExtractInfo( "mac", """.*mac=([^, ]+).*""".r,
+      ExtractInfo( "mac", """mac=([^, ]+)""".r,
           ( x: String ) => ValueFactory.create( x ) ) )
 
+  //val x = ( item.regex findAllMatchIn cmdline ).map( x => x.group(1) ).toList
   private def extractValues( cmdline: String ): List[ProcValue] = {
-    infoList.map( item =>
-      cmdline match {
-        case item.regex( x ) =>
-          ProcValue( item.name, item.f( x ) )
+    infoList.map( item => {
+      val result = ( item.regex findAllMatchIn cmdline ).map( x => x.group(1) ).toList
+      val x = result.length match {
+        case 1 =>
+          ProcValueFactory.create( item.name, item.f( result(0) ) )
+        case x if x > 1 =>
+          ProcValueFactory.create( item.name, { result.map( i => item.f( i ) ) } )
         case _ =>
-          throw new Exception( "Cannot find regex: " +item.regex + " in commandline: " + cmdline ) } )
+          throw new Exception( "Cannot find regex: " +item.regex + " in commandline: " + cmdline )
+      }
+      x
+    } )  
   }
 }
 
@@ -213,11 +220,11 @@ object ProcMetricsMonitor {
         columns )
 
       val r = MonitorFunctions.diffTables( t1, t2 )
-      val x = r.filter( _._2.filter( _.value.asInstanceOf[ProcFloatValue].value != 0f ).length > 0 )
+      val x = r.filter( _._2.filter( _.values(0).asInstanceOf[ProcFloatValue].value != 0f ).length > 0 )
       x.foreach( pid => {
-        val withoutNull = pid._2.filter( _.value.asInstanceOf[ProcFloatValue].value != 0f )
+        val withoutNull = pid._2.filter( _.values(0).asInstanceOf[ProcFloatValue].value != 0f )
         if ( withoutNull.length > 0 ) {
-          val t = withoutNull.map( x => x.name + ": " + x.value.asInstanceOf[ProcFloatValue].value )
+          val t = withoutNull.map( x => x.name + ": " + x.values(0).asInstanceOf[ProcFloatValue].value )
           val cmdline = filteredPidsToCmdlineMap( pid._1 )
           println( "PID: %8s c: %-20s v: %s"
             .format( pid._1,

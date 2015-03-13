@@ -26,7 +26,12 @@ object ValueFactory {
   def create( x: Int ): ProcGenValue = { ProcIntValue( x ) }
 }
 
-case class ProcValue( name: String, value: ProcGenValue )
+case class ProcValue( name: String, values: List[ProcGenValue] )
 case class ProcCategory( pid: Pid, category: String, values: List[ProcValue] )
 case class ProcGlobal( category: String, values: List[ProcValue] )
 case class ProcCategory2( pid: Pid, keyValue: ProcGlobal )
+
+object ProcValueFactory {
+  def create( name: String, value: ProcGenValue ): ProcValue = { ProcValue( name, List(value) ) }
+  def create( name: String, values: List[ProcGenValue] ): ProcValue = { ProcValue( name, values ) }
+}

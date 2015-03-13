@@ -18,7 +18,7 @@ object NetMac extends SysStat {
   def getStat( netDeviceName: String, content: List[String] ): Option[ProcGlobal] = {
     content(0) match {
       case macPattern( mac ) => 
-        Some( ProcGlobal( netDeviceName, List( ProcValue( "mac", ValueFactory.create( mac ) ) ) ) )
+        Some( ProcGlobal( netDeviceName, List( ProcValueFactory.create( "mac", ValueFactory.create( mac ) ) ) ) )
       case _ => None
     }
   }
