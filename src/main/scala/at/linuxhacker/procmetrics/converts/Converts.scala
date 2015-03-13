@@ -13,40 +13,31 @@ object ProcConverters {
 
   def toJson( globals: List[ProcGlobal], stats: List[ProcCategory], 
 		  multiGlobals: List[MultiGlobalStatsResult], sysStat: List[ProcGlobal] ): JsObject = {
-    var pidGroup = stats.groupBy( _.pid.pid )
     
+    val jsonStats = procCategoriesToJson( stats )
     val globalsList = globalsToJson( globals )
-
-    val jsonStats = pidGroup.map( pid => {
-      val catGroup = pid._2.groupBy( _.category )
-      val x = catGroup.map( cat => {
-        val valueList = cat._2.map( _.values  )
-        valueList.map( x => Json.obj( cat._1 -> JsObject( x.map( procValueToJson( _ ) ).toSeq ) ) )
-      }).flatten.toSeq
-      Json.obj( pid._1 -> x )
-    })
-    
     val jsonMultiStats = multiGlobals.map( g => Json.obj( g.name -> JsObject( globalsToJson( g.result  ) ) ) )
     val jsonData = Json.obj( "globals" -> JsObject( globalsList ),
-        "stats" -> jsonStats, "multi" -> jsonMultiStats,
+        "stats" -> JsObject( jsonStats ), "multi" -> jsonMultiStats,
         "sysfs" -> JsObject( globalsToJson( sysStat) ) )
     
     jsonData
   }
   
-  def procCategoriesToJson( stats: List[ProcCategory2] ): Seq[(String, JsObject)] = {
+  def procCategoriesToJson( stats: List[ProcCategory] ): Seq[(String, JsObject)] = {
     val pidGroups = stats.groupBy( _.pid.pid )
     val x = pidGroups.map( pidGroup => {
       val catList = pidGroup._2
-      val catJson = catList.map( procCategory => procCategoryToJson( procCategory ) )
-      ( pidGroup._1 -> catJson )
+      val catJson = catList.map( procCategory => 
+        procCategoryToJson( procCategory ) ).toSeq
+      ( pidGroup._1 -> JsObject( catJson ) )
     }).toSeq
-    Seq( )
+    x
   }
 
-  def procCategoryToJson( procCategory: ProcCategory2 ): ( String, JsObject ) = {
-    val valueList = JsObject( procCategory.keyValue.values.map( procValueToJson( _ ) ).toSeq )
-    ( procCategory.keyValue.category -> valueList )
+  def procCategoryToJson( procCategory: ProcCategory ): ( String, JsObject ) = {
+    val valueList = JsObject( procCategory.values.map( procValueToJson( _ ) ).toSeq )
+    ( procCategory.category -> valueList )
   }
   
   def globalsToJson( globals: List[ProcGlobal] ): Seq[(String,JsObject)] = {
